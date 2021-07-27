@@ -4,8 +4,6 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { CandlesController } from 'src/candles/candles.controller';
 import { CandlesService } from 'src/candles/candles.service';
-import { Candle } from 'src/candles/schemas/candle.schema';
-import {sum} from './sum';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -30,10 +28,6 @@ describe('AppController (e2e)', () => {
     expect(response.statusCode).toBe(404);
 
     done();
-  });
-
-  test('adds 1 + 2 to equal 3', () => {
-    expect(sum(1, 2)).toBe(3);
   });
 
   // describe('findAll', () => {

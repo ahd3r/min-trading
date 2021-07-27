@@ -6,7 +6,6 @@ import { Candle } from './schemas/candle.schema';
 import * as moment from 'moment';
 
 
-// Todo выбор пары / запись каждого месседжа в базу?
 @Injectable()
 export class CandlesService implements OnModuleInit {
 
@@ -20,7 +19,6 @@ export class CandlesService implements OnModuleInit {
         const socket: webSocket = new webSocket('wss://stream.binance.com:9443/ws/bnbusdt@kline_1m');
 
         socket.on('message', async (event) => {
-            //console.log('Message from server ', event);
             let {
                 k: {
                     t: kline_start,
@@ -50,24 +48,18 @@ export class CandlesService implements OnModuleInit {
             }
 
             await this.create(candle);
-            //console.log(candle);
         });
 
     }
 
     getCandles(from: string, to: string) {
-
         const first = moment.utc(from).toDate().getTime();
         const last = moment.utc(to).toDate().getTime();
-
-        // console.log(`first: ${first} last: ${last}`);
-
         return this.candleRepository.find({ kline_start: { $gte: first, $lte: last } });
     }
 
     async create(candle: Candle): Promise<Candle> {
         const createdCandle = new this.candleRepository(candle);
-        //console.log(createdCandle);
         return createdCandle.save();
-    }   
+    }
 }
