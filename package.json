@@ -28,6 +28,7 @@
         "@nestjs/platform-express": "^8.0.0",
         "@nestjs/platform-socket.io": "^8.0.4",
         "@nestjs/websockets": "^8.0.4",
+        "moment": "^2.29.1",
         "mongoose": "^5.13.3",
         "reflect-metadata": "^0.1.13",
         "rimraf": "^3.0.2",

@@ -6,34 +6,34 @@ export type CandleDocument = Candle & Document;
 @Schema()
 export class Candle {
 
-    @Prop({required: true})
+    @Prop({ required: true })
     kline_start: number;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     kline_close: number;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     symbol: string;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     interval: string;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     open_price: number;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     close_price: number;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     high_price: number;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     low_price: number;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     closed: boolean;
 
-    @Prop({required: true})
+    @Prop({ required: true })
     asset_volume: number;
 }
 
