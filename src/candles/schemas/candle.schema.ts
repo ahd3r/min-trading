@@ -31,9 +31,6 @@ export class Candle {
     low_price: number;
 
     @Prop({ required: true })
-    closed: boolean;
-
-    @Prop({ required: true })
     asset_volume: number;
 }
 
