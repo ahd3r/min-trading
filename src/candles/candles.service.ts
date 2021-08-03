@@ -1,109 +1,132 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as webSocket from 'ws';
 import { Candle } from './schemas/candle.schema';
+import { WebSocketBnb } from '../websocket/websocket.bnbusdt.gateway';
+import { WebSocketBtc } from '../websocket/websocket.btcusdt.gateway';
+import { CreateCandleDto } from './dto/create-candle-dto';
+import * as webSocket from 'ws';
 import * as moment from 'moment';
-import { WebSocketBnb } from "../websocket/websocket.bnbusdt.gateway";
-import { WebSocketBtc } from "../websocket/websocket.btcusdt.gateway";
-
 
 @Injectable()
 export class CandlesService implements OnModuleInit {
+  private readonly logger = new Logger(CandlesService.name);
 
-    private readonly logger = new Logger(CandlesService.name);
+  constructor(
+    @InjectModel('Candle') private readonly candleRepository: Model<Candle>,
+    private readonly webSocketServerBnb: WebSocketBnb,
+    private readonly webSocketServerBtc: WebSocketBtc
+  ) {}
 
-    constructor(@InjectModel('Candle') private readonly candleRepository: Model<Candle>, 
-    private readonly webSocketServerBnb: WebSocketBnb, 
-    private readonly webSocketServerBtc: WebSocketBtc) { }
+  onModuleInit() {
+    this.logger.log(`The module has been initialized.`);
 
-    onModuleInit() {
-        this.logger.log(`The module has been initialized.`)
-        //wss://stream.binance.com:9443/ws/bnbusdt@kline_1m
-        //wss://stream.binance.com:9443/ws/btcusdt@kline_1m
+    const first: webSocket = new webSocket('wss://stream.binance.com:9443/ws/bnbusdt@kline_1m');
+    const second: webSocket = new webSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
 
-        const first: webSocket = new webSocket('wss://stream.binance.com:9443/ws/bnbusdt@kline_1m');
-        const second: webSocket = new webSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
+    first.on('message', async (event) => {
+      let {
+        k: {
+          t: kline_start,
+          T: kline_close,
+          s: symbol,
+          i: interval,
+          o: open_price,
+          c: close_price,
+          h: high_price,
+          l: low_price,
+          x: closed,
+          q: asset_volume
+        }
+      } = JSON.parse(event.toString());
 
-        first.on('message', async (event) => {
+      if (closed) {
+        let candle: Candle = {
+          kline_start,
+          kline_close,
+          symbol,
+          interval,
+          open_price,
+          close_price,
+          high_price,
+          low_price,
+          asset_volume
+        };
 
-            let {
-                k: {
-                    t: kline_start,
-                    T: kline_close,
-                    s: symbol,
-                    i: interval,
-                    o: open_price,
-                    c: close_price,
-                    h: high_price,
-                    l: low_price,
-                    x: closed,
-                    q: asset_volume
-                }
-            } = JSON.parse(event.toString());
+        await this.create(candle);
 
-            if (closed) {
-                let candle: Candle = {
-                    kline_start,
-                    kline_close,
-                    symbol,
-                    interval,
-                    open_price,
-                    close_price,
-                    high_price,
-                    low_price,
-                    asset_volume
-                }
+        this.webSocketServerBnb.sendBinanceMessage(candle);
+      }
+    });
 
-                await this.create(candle);
+    second.on('message', async (event) => {
+      let {
+        k: {
+          t: kline_start,
+          T: kline_close,
+          s: symbol,
+          i: interval,
+          o: open_price,
+          c: close_price,
+          h: high_price,
+          l: low_price,
+          x: closed,
+          q: asset_volume
+        }
+      } = JSON.parse(event.toString());
 
-                this.webSocketServerBnb.sendBinanceMessage(candle);
-            }
-        });
+      if (closed) {
+        let candle: Candle = {
+          kline_start,
+          kline_close,
+          symbol,
+          interval,
+          open_price,
+          close_price,
+          high_price,
+          low_price,
+          asset_volume
+        };
 
-        second.on('message', async (event) => {
-            let {
-                k: {
-                    t: kline_start,
-                    T: kline_close,
-                    s: symbol,
-                    i: interval,
-                    o: open_price,
-                    c: close_price,
-                    h: high_price,
-                    l: low_price,
-                    x: closed,
-                    q: asset_volume
-                }
-            } = JSON.parse(event.toString());
+        await this.create(candle);
 
-            if (closed) {
-                let candle: Candle = {
-                    kline_start,
-                    kline_close,
-                    symbol,
-                    interval,
-                    open_price,
-                    close_price,
-                    high_price,
-                    low_price,
-                    asset_volume
-                }
-                await this.create(candle);
+        this.webSocketServerBtc.sendBinanceMessage(candle);
+      }
+    });
+  }
 
-                this.webSocketServerBtc.sendBinanceMessage(candle);
-            }
-        });
+  getCandles(from: string, to: string, pair: string) {
+    const options: any = {};
+
+    if (!from || !to) {
+      throw new BadRequestException('both fields of date are required!');
     }
 
-    getCandles(from: string, to: string) {
-        const first = moment.utc(from).toDate().getTime();
-        const last = moment.utc(to).toDate().getTime();
-        return this.candleRepository.find({ kline_start: { $gte: first, $lte: last } });
+    if (from && to) {
+      const filterFrom = moment.utc(from).toDate().getTime();
+      const filterTo = moment.utc(to).toDate().getTime();
+
+      if (filterFrom > Date.now() || filterTo > Date.now()) {
+        throw new BadRequestException('entered date in the future!');
+      }
+
+      options.kline_start = { $gte: filterFrom, $lte: filterTo };
     }
 
-    async create(candle: Candle): Promise<Candle> {
-        const createdCandle = new this.candleRepository(candle);
-        return createdCandle.save();
+    pair = pair.toUpperCase();
+
+    if (pair) {
+      if (!(pair === 'BNBUSDT' || pair === 'BTCUSDT')) {
+        throw new BadRequestException('name must be bnbusdt or btcusdt!');
+      }
+      options.symbol = pair;
     }
+
+    return this.candleRepository.find(options);
+  }
+
+  async create(createdCandleDto: CreateCandleDto): Promise<Candle> {
+    const createdCandle = new this.candleRepository(createdCandleDto);
+    return createdCandle.save();
+  }
 }

@@ -9,6 +9,6 @@ import { WebSocketBtc } from '../websocket/websocket.btcusdt.gateway';
 @Module({
   imports: [MongooseModule.forFeature([{ name: 'Candle', schema: CandleSchema }])],
   controllers: [CandlesController],
-  providers: [CandlesService, WebSocketBnb, WebSocketBtc],
+  providers: [CandlesService, WebSocketBnb, WebSocketBtc]
 })
-export class CandlesModule { }
+export class CandlesModule {}
