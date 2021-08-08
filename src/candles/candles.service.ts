@@ -7,6 +7,7 @@ import { WebSocketBtc } from '../websocket/websocket.btcusdt.gateway';
 import { CreateCandleDto } from './dto/create-candle-dto';
 import * as webSocket from 'ws';
 import * as moment from 'moment';
+import { filter } from 'rxjs';
 
 @Injectable()
 export class CandlesService implements OnModuleInit {
@@ -97,20 +98,25 @@ export class CandlesService implements OnModuleInit {
   }
 
   getCandles(from: string, to: string, pair: string) {
-    console.log(`date time: ${Date.now()}`);
     const options: any = {};
 
-    if (!from || !to) {
+    if (!(from || to)) {
       throw new BadRequestException('both fields of date are required!');
     }
 
     if (from && to) {
+      if (!moment(from).isValid() || !moment(to).isValid()) {
+        throw new BadRequestException('date non valid or used fromat no DD-MM-YYYY ');
+      }
+
+      if (from > to) {
+        throw new BadRequestException(
+          `use the range from smaller to larger. from (${from}) must be less than to (${to})`
+        );
+      }
+
       const filterFrom = moment.utc(from, CandlesService.FORMAT).toDate().getTime();
       const filterTo = moment.utc(to, CandlesService.FORMAT).toDate().getTime();
-
-      if (!moment(filterFrom).isValid() || !moment(filterTo).isValid()) {
-        throw new BadRequestException('date non valid. Please use DD-MM-YYYY format');
-      }
 
       if (filterFrom > Date.now() || filterTo > Date.now()) {
         throw new BadRequestException('entered date in the future!');
