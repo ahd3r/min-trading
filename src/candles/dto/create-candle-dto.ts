@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsIn, IsInt, IsString, Min } from 'class-validator';
 
 export class CreateCandleDto {
   @IsInt()

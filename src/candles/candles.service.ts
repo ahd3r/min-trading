@@ -11,6 +11,7 @@ import * as moment from 'moment';
 @Injectable()
 export class CandlesService implements OnModuleInit {
   private readonly logger = new Logger(CandlesService.name);
+  public static FORMAT: string = 'DD-MM-YYYY';
 
   constructor(
     @InjectModel('Candle') private readonly candleRepository: Model<Candle>,
@@ -96,6 +97,7 @@ export class CandlesService implements OnModuleInit {
   }
 
   getCandles(from: string, to: string, pair: string) {
+    console.log(`date time: ${Date.now()}`);
     const options: any = {};
 
     if (!from || !to) {
@@ -103,8 +105,12 @@ export class CandlesService implements OnModuleInit {
     }
 
     if (from && to) {
-      const filterFrom = moment.utc(from).toDate().getTime();
-      const filterTo = moment.utc(to).toDate().getTime();
+      const filterFrom = moment.utc(from, CandlesService.FORMAT).toDate().getTime();
+      const filterTo = moment.utc(to, CandlesService.FORMAT).toDate().getTime();
+
+      if (!moment(filterFrom).isValid() || !moment(filterTo).isValid()) {
+        throw new BadRequestException('date non valid. Please use DD-MM-YYYY format');
+      }
 
       if (filterFrom > Date.now() || filterTo > Date.now()) {
         throw new BadRequestException('entered date in the future!');
@@ -113,9 +119,9 @@ export class CandlesService implements OnModuleInit {
       options.kline_start = { $gte: filterFrom, $lte: filterTo };
     }
 
-    pair = pair.toUpperCase();
-
     if (pair) {
+      pair = pair.toUpperCase();
+
       if (!(pair === 'BNBUSDT' || pair === 'BTCUSDT')) {
         throw new BadRequestException('name must be bnbusdt or btcusdt!');
       }
