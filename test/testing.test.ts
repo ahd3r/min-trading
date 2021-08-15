@@ -1,7 +1,6 @@
 import { getRequest, postRequest } from './base-testing';
 import { Response } from 'supertest';
-
-// проверять больше информации (поля, массивы)
+import { CandlesService } from '../src/candles/candles.service';
 
 describe('initial testing', () => {
   it('should create new candle and save it to database', async () => {
@@ -38,6 +37,7 @@ describe('initial testing', () => {
     const candle = {};
     const res: Response = await postRequest('/candles', candle);
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe('this will be the message from class-validator');
   });
 
   it('should return candles in period A & B', async () => {
@@ -50,19 +50,8 @@ describe('initial testing', () => {
 
     const result = res.body;
 
+    expect(res.statusCode).toEqual(200);
     expect(result).toBe(Array);
-
-    //all object fields must satisfy the criterion > from and < to
-    expect(result).toEqual(
-      expect.arrayContaining([
-        // сравнить поля объекта
-        expect.objectContaining({
-          //
-          //kline_start:
-          //const filterFrom = moment.utc(from).toDate().getTime();
-        })
-      ])
-    );
   });
 
   it('should return all candles with symbol bnbusdt', async () => {
@@ -72,12 +61,10 @@ describe('initial testing', () => {
 
     const result = res.body;
 
-    // result must be an array
+    expect(res.statusCode).toEqual(200);
+
     expect(result).toBe(Array);
 
-    // all items in the array must be of type Candle
-
-    // check for all items in array have symbol 'bnbusdt'
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -93,6 +80,7 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(200);
+    //TODO: expect поле kline start каждого объекта массива больше from и меньше to
   });
 
   it('should return validation error when post parametres from & to aren`t date', async () => {
@@ -104,8 +92,8 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
-    //expect(res.body).toBe()
-    // expect status message
+    expect(res.body).toBe(`date non valid or used format no ${CandlesService.FORMAT}`);
+    // TODO: expect пустой массив. проверить что возвращается в методе
   });
 
   it('should return validation error when post parametres only one date', async () => {
@@ -116,6 +104,7 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe('both fields of date are required!');
   });
 
   it('should return validation error when date in future', async () => {
@@ -127,13 +116,16 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe('entered date in the future!');
   });
 
   it('should return validation error when pair not exist', async () => {
     const pair = 'blah';
 
     const res: Response = await getRequest('/', pair);
+
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe('name must be bnbusdt or btcusdt!');
   });
 
   it('should return BadRequestException when date is invalid', async () => {
@@ -142,6 +134,7 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe(`date non valid or used format no ${CandlesService.FORMAT}`);
   });
 
   it('should return bad request when from > to', async () => {
@@ -153,6 +146,9 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe(
+      `use the range from smaller to larger. from (${params.from}) must be less than to (${params.to})`
+    );
   });
 
   it('should return bad requset when date format is invalid', async () => {
@@ -164,16 +160,6 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
+    expect(res.body).toBe(`date non valid or used format no ${CandlesService.FORMAT}`);
   });
 });
-//       schema of candle
-
-//       kline_start: 1626641340000,
-//       kline_close: 1626641399999,
-//       symbol: 'BNBUSDT',
-//       interval: '1m',
-//       open_price: 304.17,
-//       close_price: 304.34,
-//       high_price: 304.34,
-//       low_price: 304.14,
-//       asset_volume: 76858.488228

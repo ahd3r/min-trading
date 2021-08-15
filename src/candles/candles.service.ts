@@ -103,7 +103,6 @@ export class CandlesService implements OnModuleInit {
       throw new BadRequestException('both fields of date are required!');
     }
 
-    // if (from && to) {
     this.logger.log(`${from} - is valid: ${moment(from, CandlesService.FORMAT).isValid()}`);
     this.logger.log(`${to} - is valid: ${moment(to, CandlesService.FORMAT).isValid()}`);
 
@@ -128,10 +127,7 @@ export class CandlesService implements OnModuleInit {
       throw new BadRequestException('entered date in the future!');
     }
 
-    //this.logger.log(filterFrom);
-
     options.kline_start = { $gte: filterFrom, $lte: filterTo };
-    // }
 
     if (pair) {
       pair = pair.toUpperCase();

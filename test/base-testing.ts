@@ -3,13 +3,13 @@ import { AppModule } from '../src/app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 
-function delay(milliseconds) {
+const delay = (milliseconds) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve(undefined);
     }, milliseconds);
   });
-}
+};
 
 export class BaseTest {
   private static app: INestApplication;
