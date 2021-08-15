@@ -7,12 +7,11 @@ import { WebSocketBtc } from '../websocket/websocket.btcusdt.gateway';
 import { CreateCandleDto } from './dto/create-candle-dto';
 import * as webSocket from 'ws';
 import * as moment from 'moment';
-import { filter } from 'rxjs';
 
 @Injectable()
 export class CandlesService implements OnModuleInit {
   private readonly logger = new Logger(CandlesService.name);
-  public static FORMAT: string = 'DD-MM-YYYY';
+  public static readonly FORMAT: string = 'DD-MM-YYYY';
 
   constructor(
     @InjectModel('Candle') private readonly candleRepository: Model<Candle>,
@@ -27,7 +26,7 @@ export class CandlesService implements OnModuleInit {
     const second: webSocket = new webSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
 
     first.on('message', async (event) => {
-      let {
+      const {
         k: {
           t: kline_start,
           T: kline_close,
@@ -43,7 +42,7 @@ export class CandlesService implements OnModuleInit {
       } = JSON.parse(event.toString());
 
       if (closed) {
-        let candle: Candle = {
+        const candle: Candle = {
           kline_start,
           kline_close,
           symbol,
@@ -62,7 +61,7 @@ export class CandlesService implements OnModuleInit {
     });
 
     second.on('message', async (event) => {
-      let {
+      const {
         k: {
           t: kline_start,
           T: kline_close,
@@ -78,7 +77,7 @@ export class CandlesService implements OnModuleInit {
       } = JSON.parse(event.toString());
 
       if (closed) {
-        let candle: Candle = {
+        const candle: Candle = {
           kline_start,
           kline_close,
           symbol,
@@ -104,34 +103,35 @@ export class CandlesService implements OnModuleInit {
       throw new BadRequestException('both fields of date are required!');
     }
 
-    if (from && to) {
-      this.logger.log(`${from}: is valid: ${moment(from, CandlesService.FORMAT).isValid()}`);
-      this.logger.log(`${to}: is valid: ${moment(to, CandlesService.FORMAT).isValid()}`);
+    // if (from && to) {
+    this.logger.log(`${from} - is valid: ${moment(from, CandlesService.FORMAT).isValid()}`);
+    this.logger.log(`${to} - is valid: ${moment(to, CandlesService.FORMAT).isValid()}`);
 
-      if (
-        !moment(from, CandlesService.FORMAT).isValid() ||
-        !moment(to, CandlesService.FORMAT).isValid()
-      ) {
-        throw new BadRequestException(`date non valid or used format no ${CandlesService.FORMAT}`);
-      }
-
-      const filterFrom = moment.utc(from, CandlesService.FORMAT).toDate().getTime();
-      const filterTo = moment.utc(to, CandlesService.FORMAT).toDate().getTime();
-
-      if (filterFrom > filterTo) {
-        throw new BadRequestException(
-          `use the range from smaller to larger. from (${from}) must be less than to (${to})`
-        );
-      }
-
-      if (filterFrom > Date.now() || filterTo > Date.now()) {
-        throw new BadRequestException('entered date in the future!');
-      }
-
-      //this.logger.log(filterFrom);
-
-      options.kline_start = { $gte: filterFrom, $lte: filterTo };
+    if (
+      !(
+        moment(from, CandlesService.FORMAT).isValid() || moment(to, CandlesService.FORMAT).isValid()
+      )
+    ) {
+      throw new BadRequestException(`date non valid or used format no ${CandlesService.FORMAT}`);
     }
+
+    const filterFrom = moment.utc(from, CandlesService.FORMAT).toDate().getTime();
+    const filterTo = moment.utc(to, CandlesService.FORMAT).toDate().getTime();
+
+    if (filterFrom > filterTo) {
+      throw new BadRequestException(
+        `use the range from smaller to larger. from (${from}) must be less than to (${to})`
+      );
+    }
+
+    if (filterFrom > Date.now() || filterTo > Date.now()) {
+      throw new BadRequestException('entered date in the future!');
+    }
+
+    //this.logger.log(filterFrom);
+
+    options.kline_start = { $gte: filterFrom, $lte: filterTo };
+    // }
 
     if (pair) {
       pair = pair.toUpperCase();

@@ -1,11 +1,10 @@
-import { getRequest, postRequest } from './base-testing.test';
+import { getRequest, postRequest } from './base-testing';
 import { Response } from 'supertest';
 
-//jest.setTimeout(100000);
+// проверять больше информации (поля, массивы)
 
 describe('initial testing', () => {
-  // create a valid entity and post it then save to database
-  it('should create new candle and save it to database', async (done) => {
+  it('should create new candle and save it to database', async () => {
     const expectedResult = {
       kline_start: 16293651180000,
       kline_close: 1626651239999,
@@ -18,11 +17,9 @@ describe('initial testing', () => {
       asset_volume: 232304.642428
     };
 
-    const expectedStatusCode = 201;
-
     const res: Response = await postRequest('/candles', expectedResult);
 
-    expect(res.statusCode).toEqual(expectedStatusCode);
+    expect(res.statusCode).toEqual(201);
 
     expect(res.body).toHaveProperty('kline_start', 16293651180000);
     expect(res.body).toHaveProperty('kline_close', 1626651239999);
@@ -35,22 +32,18 @@ describe('initial testing', () => {
     expect(res.body).toHaveProperty('asset_volume', 232304.642428);
     expect(res.body).toHaveProperty('_id');
     expect(res.body).toHaveProperty('__v');
-
-    done();
   });
 
-  // create empty entity of candle and do post request with it. Expect status bad request
-  it('create not valid candle and try to do post request', async (done) => {
+  it('create not valid candle and try to do post request. Expect status bad request', async () => {
     const candle = {};
     const res: Response = await postRequest('/candles', candle);
     expect(res.statusCode).toEqual(400);
-    done();
   });
 
-  it('should return candles in period A & B', async (done) => {
+  it('should return candles in period A & B', async () => {
     const params = {
-      from: '1970-01-01',
-      to: '2021-08-03'
+      from: '01-01-1970',
+      to: '03-08-2021'
     };
 
     const res: Response = await getRequest('/', params);
@@ -70,10 +63,9 @@ describe('initial testing', () => {
         })
       ])
     );
-    done();
   });
 
-  it('should return all candles with symbol bnbusdt', async (done) => {
+  it('should return all candles with symbol bnbusdt', async () => {
     const pair = 'BNBUSDT';
 
     const res: Response = await getRequest('/', pair);
@@ -93,10 +85,17 @@ describe('initial testing', () => {
         })
       ])
     );
-    done();
   });
 
-  it('should return validation error when post parametres from & to aren`t date', async (done) => {
+  it('should return candles for pair BNBUSDT in period 03-03-2021 and 04-03-2021', async () => {
+    const params = { from: '03-03-2021', to: '04-03-2021', pair: 'BNBUSDT' };
+
+    const res: Response = await getRequest('/', params);
+
+    expect(res.statusCode).toEqual(200);
+  });
+
+  it('should return validation error when post parametres from & to aren`t date', async () => {
     const params = {
       from: 'blah',
       to: 'blah'
@@ -105,10 +104,11 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
-    done();
+    //expect(res.body).toBe()
+    // expect status message
   });
 
-  it('should return validation error when post parametres only one date', async (done) => {
+  it('should return validation error when post parametres only one date', async () => {
     const params = {
       from: '1970-01-01'
     };
@@ -116,11 +116,9 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
-
-    done();
   });
 
-  it('should return validation error when date in future', async (done) => {
+  it('should return validation error when date in future', async () => {
     const params = {
       from: '1970-01-01',
       to: '2022-01-01'
@@ -129,19 +127,45 @@ describe('initial testing', () => {
     const res: Response = await getRequest('/', params);
 
     expect(res.statusCode).toEqual(400);
-
-    done();
   });
 
-  it('should return validation error when pair not exist', async (done) => {
+  it('should return validation error when pair not exist', async () => {
     const pair = 'blah';
 
     const res: Response = await getRequest('/', pair);
     expect(res.statusCode).toEqual(400);
-    done();
+  });
+
+  it('should return BadRequestException when date is invalid', async () => {
+    const params = { from: '02-03-2021', to: '33-03-2021' };
+
+    const res: Response = await getRequest('/', params);
+
+    expect(res.statusCode).toEqual(400);
+  });
+
+  it('should return bad request when from > to', async () => {
+    const params = {
+      from: '03-03-2021',
+      to: '02-03-2021'
+    };
+
+    const res: Response = await getRequest('/', params);
+
+    expect(res.statusCode).toEqual(400);
+  });
+
+  it('should return bad requset when date format is invalid', async () => {
+    const params = {
+      from: '2021-03-03',
+      to: '2021-03-10'
+    };
+
+    const res: Response = await getRequest('/', params);
+
+    expect(res.statusCode).toEqual(400);
   });
 });
-
 //       schema of candle
 
 //       kline_start: 1626641340000,

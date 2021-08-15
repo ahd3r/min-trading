@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsString, Min } from 'class-validator';
+import { IsNumber, IsIn, IsInt, IsString, Min } from 'class-validator';
 
 export class CreateCandleDto {
   @IsInt()
@@ -16,23 +16,23 @@ export class CreateCandleDto {
   @IsString()
   interval: string;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   open_price: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   close_price: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   high_price: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   low_price: number;
 
-  @IsInt()
+  @IsNumber()
   @Min(0)
   asset_volume: number;
 }

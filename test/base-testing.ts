@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 
 function delay(milliseconds) {
@@ -26,9 +26,9 @@ export class BaseTest {
       imports: [AppModule]
     }).compile();
     this.app = moduleFixture.createNestApplication();
+    this.app.useGlobalPipes(new ValidationPipe());
     await this.app.init();
-
-    //await delay(60000);
+    delay(60000);
   }
 }
 

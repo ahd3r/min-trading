@@ -1,10 +1,10 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import WebSocket from 'ws';
 
 @WebSocketGateway({ namespace: 'bnbusdt' })
 export class WebSocketBnb {
   @WebSocketServer()
-  private readonly server: Server;
+  private readonly server: WebSocket;
 
   sendBinanceMessage(message) {
     this.server.emit('foo', message);
