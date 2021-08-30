@@ -32,7 +32,7 @@ export class BaseTest {
   }
 }
 
-export const getRequest = async (url: string, params: any): Promise<request.Response> => {
+export const getRequest = async (url: any): Promise<request.Response> => {
   const app = await BaseTest.getTestApp();
   const req = request(app.getHttpServer()).get(url);
   return req;

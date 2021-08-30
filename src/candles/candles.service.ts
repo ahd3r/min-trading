@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Logger, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Candle } from './schemas/candle.schema';
+import { Candle } from '../database/schemas/candle.schema';
 import { WebSocketBnb } from '../websocket/websocket.bnbusdt.gateway';
 import { WebSocketBtc } from '../websocket/websocket.btcusdt.gateway';
 import { CreateCandleDto } from './dto/create-candle-dto';

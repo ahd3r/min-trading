@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CreateCandleDto } from './dto/create-candle-dto';
 import { WebSocketBnb } from '../websocket/websocket.bnbusdt.gateway';
 import { WebSocketBtc } from '../websocket/websocket.btcusdt.gateway';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { CandleSchema } from '../database/schemas/candle.schema';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import * as Joi from 'joi';
         MONGO_URI: Joi.string().uri()
       })
     }),
-    MongooseModule.forFeature([{ name: 'Candle', schema: CreateCandleDto }])
+    MongooseModule.forFeature([{ name: 'Candle', schema: CandleSchema }])
   ],
   controllers: [CandlesController],
   providers: [CandlesService, WebSocketBnb, WebSocketBtc]

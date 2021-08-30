@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CandlesService } from './candles.service';
 import { CreateCandleDto } from './dto/create-candle-dto';
-import { Candle } from './schemas/candle.schema';
+import { Candle } from '../database/schemas/candle.schema';
 
 @Controller('candles')
 export class CandlesController {
